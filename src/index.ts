@@ -1,9 +1,29 @@
 import "reflect-metadata";
-import express from "express";  
+import express from "express";
+import dotenv from "dotenv";
+import { AppDataSource } from "./ormconfig.js";
+
+dotenv.config();
 
 const app = express();
-const PROT = 3000;
+app.use(express.json());
 
-app.get("/", (req, res) => res.send("Hello World"));
+// app.use('/api/users', userRoutes)
 
-app.listen(PROT, () => console.log(`Сервер работает на порту ${PROT}`));
+// app.use(errorMiddleware)
+
+const PORT = 3000;
+// const PORT = process.env.PORT || 3000
+
+app.get("/", (req, res) => res.send("Привет, Мир!"));
+
+AppDataSource.initialize()
+  .then(() => {
+    console.log("База данных успешно подключена");
+    app.listen(PORT, () => {
+      console.log(`Сервер запущен на порту ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Во время подключения к базе данных произошла ошибка:", err);
+  });
