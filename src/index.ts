@@ -2,13 +2,14 @@ import "reflect-metadata";
 import express from "express";
 import dotenv from "dotenv";
 import { AppDataSource } from "./ormconfig.js";
+import router from "./routes/userRoutes.js";
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());
 
-// app.use('/api/users', userRoutes)
+app.use('/api/users', router)
 
 // app.use(errorMiddleware)
 
