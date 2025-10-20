@@ -25,23 +25,20 @@ export const authMiddleware = (
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer")) {
-    return res.status(401).json({ message: "Не авторизован" });
+    return next({ status: 401, message: "Не авторизован, не действительный токен" });
   }
 
   const token = authHeader.substring(7, authHeader.length);
-  try {
-    const secret = process.env.JWT_SECRET || "secret";
-    const decoded = jwt.verify(token, secret) as JwtPayload;
 
-    console.log('authMiddleware', "decoded:", decoded);
+  const secret = process.env.JWT_SECRET || "secret";
+  const decoded = jwt.verify(token, secret) as JwtPayload;
 
-    req.user = { id: decoded.userId, role: decoded.userRole };
-    
-    console.log("req.user:", req.user);
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: "Авторизация отклонена, не действительный токен" });
-  }
+  console.log("authMiddleware", "decoded:", decoded);
+
+  req.user = { id: decoded.userId, role: decoded.userRole };
+
+  console.log("req.user:", req.user);
+  next();
 };
 
 export const adminOrOwnerMiddleware = (
@@ -51,9 +48,9 @@ export const adminOrOwnerMiddleware = (
 ) => {
   const { id } = req.params;
   if (!req.user)
-    return res.status(401).json({ message: "Пользователь не авторизован" });
+    return next({ status: 401, message: "Пользователь не авторизован" });
 
-  console.log('adminOrOwnerMiddleware', "user:", req.user);
+  console.log("adminOrOwnerMiddleware", "user:", req.user);
 
   if (req.user.role === "admin") {
     return next();
@@ -62,7 +59,6 @@ export const adminOrOwnerMiddleware = (
     return next();
   }
 
-  
   console.log("req.user.id:", req.user.id, "req.params.id:", id);
-  return res.status(403).json({ message: "Доступ запрещен" });
+  return next({ status: 403, message: "Доступ запрещен" });
 };

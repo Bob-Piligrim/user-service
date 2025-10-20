@@ -1,3 +1,4 @@
+import { asyncHandler } from '../helpets/asyncHandler.js';
 import {
   Router,
   type NextFunction,
@@ -18,23 +19,23 @@ import {
 
 const router = Router();
 
-router.post("/register", registerUser);
+router.post("/register", asyncHandler(registerUser));
 
-router.post("/login", loginUser);
+router.post("/login", asyncHandler(loginUser));
 
-router.get("/:id", authMiddleware, adminOrOwnerMiddleware, getUserById);
+router.get("/:id", authMiddleware, adminOrOwnerMiddleware, asyncHandler(getUserById));
 
 router.get(
   "/",
   authMiddleware,
   (req: Request, res: Response, next: NextFunction) => {
     if (req.user?.role !== "admin")
-      return res.status(403).json({ message: "Нет прав доступа" });
+      return next({status: 403, message: "Нет прав доступа"});
     next();
   },
-  getAllUsers
+  asyncHandler(getAllUsers)
 );
 
-router.patch("/:id/block", authMiddleware, adminOrOwnerMiddleware, blockUser);
+router.patch("/:id/block", authMiddleware, adminOrOwnerMiddleware, asyncHandler(blockUser));
 
 export default router;
