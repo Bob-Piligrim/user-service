@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 interface JwtPayload {
   userId: string;
-  role: "admin" | "user";
+  userRole: "admin" | "user";
 }
 
 declare global {
@@ -25,17 +25,22 @@ export const authMiddleware = (
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer")) {
-    return res.status(401).json({ message: "Авторизация отклонена" });
+    return res.status(401).json({ message: "Не авторизован" });
   }
 
   const token = authHeader.substring(7, authHeader.length);
   try {
     const secret = process.env.JWT_SECRET || "secret";
     const decoded = jwt.verify(token, secret) as JwtPayload;
-    req.user = { id: decoded.userId, role: decoded.role };
+
+    console.log('authMiddleware', "decoded:", decoded);
+
+    req.user = { id: decoded.userId, role: decoded.userRole };
+    
+    console.log("req.user:", req.user);
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Авторизация отклонена" });
+    return res.status(401).json({ message: "Авторизация отклонена, не действительный токен" });
   }
 };
 
@@ -47,8 +52,17 @@ export const adminOrOwnerMiddleware = (
   const { id } = req.params;
   if (!req.user)
     return res.status(401).json({ message: "Пользователь не авторизован" });
-  if (req.user.id === id || req.user.role === "admin") {
+
+  console.log('adminOrOwnerMiddleware', "user:", req.user);
+
+  if (req.user.role === "admin") {
     return next();
   }
+  if (req.user.id === id) {
+    return next();
+  }
+
+  
+  console.log("req.user.id:", req.user.id, "req.params.id:", id);
   return res.status(403).json({ message: "Доступ запрещен" });
 };

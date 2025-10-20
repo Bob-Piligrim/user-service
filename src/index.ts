@@ -13,8 +13,7 @@ app.use('/api/users', router)
 
 // app.use(errorMiddleware)
 
-const PORT = 3000;
-// const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 3000
 
 app.get("/", (req, res) => res.send("Привет, Мир!"));
 
