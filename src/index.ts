@@ -3,6 +3,7 @@ import express from "express";
 import dotenv from "dotenv";
 import { AppDataSource } from "./ormconfig.js";
 import router from "./routes/userRoutes.js";
+import { errorMiddleware } from "./middleware/errorMiddleware.js";
 
 dotenv.config();
 
@@ -11,11 +12,14 @@ app.use(express.json());
 
 app.use('/api/users', router)
 
-// app.use(errorMiddleware)
+
 
 const PORT = process.env.PORT || 3000
 
 app.get("/", (req, res) => res.send("Привет, Мир!"));
+
+
+app.use(errorMiddleware)
 
 AppDataSource.initialize()
   .then(() => {
