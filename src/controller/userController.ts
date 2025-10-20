@@ -1,8 +1,7 @@
-import { error } from "console";
 import { Role, Status, User } from "../entity/User.js";
 import { AppDataSource } from "../ormconfig.js";
 import type { Request, Response } from "express";
-import * as jwt from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 
 const userRepository = AppDataSource.getRepository(User);
 
@@ -65,6 +64,7 @@ export const loginUser = async (req: Request, res: Response) => {
       userId: user.id,
       userRole: user.role,
     };
+    console.log("payload", payload);
 
     const secret = process.env.JWT_SECRET || "secret";
     const token = jwt.sign(payload, secret, { expiresIn: "1h" });
@@ -106,14 +106,21 @@ export const getAllUsers = async (req: Request, res: Response) => {
 
 export const blockUser = async (req: Request, res: Response) => {
   try {
-    const { id } = req.body;
+    const { id } = req.params;
     const user = await userRepository.findOneBy({ id });
     if (!user) {
+      console.log("В случае, если пользователь не найден", user);
       return res.status(400).json({ message: "Пользователь не найден" });
+    }
+
+    if (user.role === "admin") {
+      console.log("В случае, если блокируемый администратор", user)
+      return res.status(400).json({message: "Пользователь является администратором"})
     }
 
     user.status = Status.INACTIVE;
     await userRepository.save(user);
+    console.log("В случае, если пользователь найден и заблокирован", user);
 
     const { password, ...userWithoutPassword } = user;
     return res.json({
@@ -121,6 +128,7 @@ export const blockUser = async (req: Request, res: Response) => {
       user: userWithoutPassword,
     });
   } catch (err) {
+    console.error("В случае, если ошибка", err);
     return res.status(500).json({ message: "Ошибка сервера", error: err });
   }
 };
